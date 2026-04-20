@@ -98,7 +98,7 @@ streamlit run app.py
 
 ## 👨‍💻 Author
 
-**Prashanth Madival**
+**Prashanth M**
 
 ---
 
