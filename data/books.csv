@@ -1,0 +1,8 @@
+book_id,title,author,genre,rating,image_url
+1,Harry Potter,J.K. Rowling,Fantasy,4.8,https://covers.openlibrary.org/b/id/7984916-L.jpg
+2,The Hobbit,J.R.R. Tolkien,Fantasy,4.7,https://covers.openlibrary.org/b/id/6979861-L.jpg
+3,Atomic Habits,James Clear,Self-help,4.6,https://covers.openlibrary.org/b/id/9259256-L.jpg
+4,Rich Dad Poor Dad,Robert Kiyosaki,Finance,4.5,https://covers.openlibrary.org/b/id/240726-L.jpg
+5,Alchemist,Paulo Coelho,Fiction,4.4,https://covers.openlibrary.org/b/id/8277896-L.jpg
+6,Think and Grow Rich,Napoleon Hill,Finance,4.3,https://covers.openlibrary.org/b/id/8231856-L.jpg
+7,Ikigai,Hector Garcia,Self-help,4.2,https://covers.openlibrary.org/b/id/9251996-L.jpg
