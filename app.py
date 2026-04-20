@@ -5,25 +5,16 @@ import re
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
-# ---------------- CONFIG ---------------- #
 st.set_page_config(page_title="📚 Book Recommender", layout="wide")
 
-# ---------------- CUSTOM CSS (NETFLIX UI) ---------------- #
+# ---------------- CSS ---------------- #
 st.markdown("""
 <style>
-body {
-    background-color: #0e1117;
-    color: white;
-}
 .book-card {
     background-color: #1c1f26;
     padding: 10px;
     border-radius: 12px;
     text-align: center;
-    transition: transform 0.2s;
-}
-.book-card:hover {
-    transform: scale(1.05);
 }
 .title {
     font-size: 14px;
@@ -32,19 +23,20 @@ body {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- LOAD DATA (NO PKL ✅) ---------------- #
+# ---------------- LOAD DATA ---------------- #
 @st.cache_data
 def load_data():
     books = pd.read_csv("books.csv")
 
-    # Clean data
     books = books.dropna(subset=["title"])
     books["authors"] = books["authors"].fillna("")
 
-    # Create tags
+    # 🔥 LIMIT DATA (IMPORTANT FOR STREAMLIT)
+    books = books.head(5000)
+
     books["tags"] = books["title"] + " " + books["authors"]
 
-    cv = CountVectorizer(max_features=5000, stop_words="english")
+    cv = CountVectorizer(max_features=3000, stop_words="english")
     vectors = cv.fit_transform(books["tags"]).toarray()
 
     similarity = cosine_similarity(vectors)
@@ -53,45 +45,35 @@ def load_data():
 
 books, similarity = load_data()
 
-# ---------------- FETCH IMAGE ---------------- #
+# ---------------- IMAGE ---------------- #
 @st.cache_data
 def fetch_image(book_name):
     try:
-        clean_name = re.sub(r"\(.*?\)", "", book_name).strip()
+        clean = re.sub(r"\(.*?\)", "", book_name)
 
-        # OpenLibrary
-        url = f"https://openlibrary.org/search.json?title={clean_name}&limit=1"
-        res = requests.get(url, timeout=5).json()
+        url = f"https://openlibrary.org/search.json?title={clean}&limit=1"
+        res = requests.get(url, timeout=3)
 
-        if res.get("docs"):
-            cover_id = res["docs"][0].get("cover_i")
-            if cover_id:
-                return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
-
-        # Google Books fallback
-        url2 = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{clean_name}"
-        res2 = requests.get(url2, timeout=5).json()
-
-        if "items" in res2:
-            for item in res2["items"]:
-                img = item.get("volumeInfo", {}).get("imageLinks", {}).get("thumbnail")
-                if img:
-                    return img
-
+        if res.status_code == 200:
+            data = res.json()
+            if data.get("docs"):
+                cover_id = data["docs"][0].get("cover_i")
+                if cover_id:
+                    return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
     except:
         pass
 
-    return "https://via.placeholder.com/150?text=No+Image"
+    return "https://via.placeholder.com/150"
 
-# ---------------- RECOMMEND FUNCTION ---------------- #
+# ---------------- RECOMMEND ---------------- #
 def recommend(book, n=5):
     index = books[books['title'] == book].index[0]
     distances = similarity[index]
 
     books_list = sorted(
         list(enumerate(distances)),
-        reverse=True,
-        key=lambda x: x[1]
+        key=lambda x: x[1],
+        reverse=True
     )[1:n+1]
 
     return [books.iloc[i[0]] for i in books_list]
@@ -106,32 +88,15 @@ selected_book = st.sidebar.selectbox(
 
 top_n = st.sidebar.slider("📊 Number of recommendations", 3, 10, 5)
 
-st.sidebar.markdown("---")
-
-st.sidebar.info("""
-🎯 Features:
-- ML-based recommendations
-- Netflix-style UI
-- Book ratings display
-- API-based images
-""")
-
-# ---------------- MAIN TITLE ---------------- #
-st.markdown(
-    "<h1 style='text-align:center;'>📚 Book Recommendation System</h1>",
-    unsafe_allow_html=True
-)
-
+# ---------------- MAIN ---------------- #
+st.markdown("<h1 style='text-align:center;'>📚 Book Recommendation System</h1>", unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ---------------- BUTTON ---------------- #
 if st.button("🚀 Recommend"):
 
-    with st.spinner("Finding best books for you..."):
+    with st.spinner("Finding best books..."):
 
         results = recommend(selected_book, top_n)
-
-        st.markdown("## 🎬 Recommended For You")
 
         cols = st.columns(top_n)
 
@@ -140,16 +105,14 @@ if st.button("🚀 Recommend"):
 
                 img = fetch_image(book.title)
 
-                # ⭐ rating (if exists)
                 rating = book["average_rating"] if "average_rating" in books.columns else "N/A"
 
-                # Netflix-style card
                 st.markdown(f"""
                 <div class="book-card">
-                    <img src="{img}" style="width:100%; border-radius:10px;" />
+                    <img src="{img}" width="100%">
                     <div class="title">{book.title}</div>
                     <div>⭐ {rating}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-        st.success("✅ Recommendations ready!")
+        st.success("✅ Done!")
