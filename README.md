@@ -65,3 +65,10 @@ git clone https://github.com/maniac-24/Book-Recommendation-System-ML
 cd Book-Recommendation-System-ML
 pip install -r requirements.txt
 streamlit run app.py
+
+---
+
+## 🌐 Live Demo
+🔗 [Click here to try the app](https://book-recommendation-system-ml-mcgkyzbqmt4uchtdpw9qhm.streamlit.app/)
+
+---
