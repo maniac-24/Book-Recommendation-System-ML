@@ -1,74 +1,106 @@
-# Book Recommendation System
+# 📚 Book Recommendation System
 
-## Overview
-This project is a machine learning-based book recommendation system that suggests similar books based on user selection.
-
----
-
-## Technologies Used
-- Python
-- Pandas
-- Streamlit
-- Machine Learning (Similarity Matrix)
-
----
-
-## Features
-- Select a book from dropdown
-- Get top 5 similar books
-- Displays book titles and images
-- Fast recommendation using precomputed similarity
-
----
-
-## How It Works
-1. Dataset of books is processed
-2. Similarity matrix is created
-3. User selects a book
-4. System finds similar books using similarity scores
-5. Displays recommendations
-
----
-
-## Screenshots
-
-### Home Page
-![Home](images/home.png)
-
-### Recommendation
-![Recommendation](images/recommendation.png)
-
-### Output
-![Output](images/output.png)
-
----
-
-## How It Works
-- Dataset is processed using Pandas
-- Similarity matrix is created using cosine similarity
-- When a user selects a book:
-  - System finds similar books
-  - Returns top 5 recommendations
-
----
-
-## Run Project
-
-pip install -r requirements.txt
-streamlit run app.py
-
----
-
-## Run Locally
-
-git clone https://github.com/maniac-24/Book-Recommendation-System-ML
-cd Book-Recommendation-System-ML
-pip install -r requirements.txt
-streamlit run app.py
+🚀 A Machine Learning-based Book Recommendation System that suggests similar books using **cosine similarity**.
+Built with **Python, Pandas, and Streamlit**, and deployed as a live web app.
 
 ---
 
 ## 🌐 Live Demo
-🔗 [Click here to try the app](https://book-recommendation-system-ml-mcgkyzbqmt4uchtdpw9qhm.streamlit.app/)
+
+👉 https://book-recommendation-system-ml-mcgkyzbqmt4uchtdpw9qhm.streamlit.app/
 
 ---
+
+## ✨ Features
+
+* 🔍 Select a book from dropdown
+* 🤖 ML-based recommendations (Cosine Similarity)
+* 📖 Top N similar books suggestion
+* 🖼️ Dynamic book cover images (OpenLibrary + Google API)
+* ⚡ Fast recommendations using precomputed similarity
+* 🎨 Clean and responsive UI with Streamlit
+
+---
+
+## 🛠️ Tech Stack
+
+* **Python**
+* **Pandas**
+* **Scikit-learn**
+* **Streamlit**
+* **APIs** (OpenLibrary, Google Books)
+
+---
+
+## 🧠 How It Works
+
+1. Dataset of books is processed using Pandas
+2. Text/vector features are created
+3. Cosine similarity matrix is computed
+4. User selects a book
+5. System finds most similar books based on similarity score
+6. Displays top recommendations with images
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Home Page
+
+![Home](images/home.png)
+![Recommendation](images/output1.png)
+![Output](images/output2.png)
+
+### 📖 Recommendations
+
+![Recommendation](images/output 1.png)
+
+### 🎯 Output
+
+![Output](images/output 2.png)
+
+---
+
+## ⚙️ Installation
+
+```bash
+git clone https://github.com/maniac-24/Book-Recommendation-System-ML
+cd Book-Recommendation-System-ML
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+---
+
+## 📂 Project Structure
+
+```
+├── app.py
+├── train_model.py
+├── books.csv
+├── requirements.txt
+├── images/
+├── README.md
+```
+
+---
+
+## 🚀 Future Improvements
+
+* ⭐ Add user ratings & reviews
+* 🔍 Smart search bar (autocomplete)
+* 📊 Genre-based filtering
+* ❤️ Save favorite books
+* 🎨 Netflix-style UI
+
+---
+
+## 👨‍💻 Author
+
+**Prashanth Madival**
+
+---
+
+## ⭐ Support
+
+If you like this project, give it a ⭐ on GitHub!
