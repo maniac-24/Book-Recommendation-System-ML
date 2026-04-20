@@ -43,6 +43,15 @@ This project is a machine learning-based book recommendation system that suggest
 
 ---
 
+## How It Works
+- Dataset is processed using Pandas
+- Similarity matrix is created using cosine similarity
+- When a user selects a book:
+  - System finds similar books
+  - Returns top 5 recommendations
+
+---
+
 ## Run Project
 
 ```bash
