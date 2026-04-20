@@ -30,6 +30,19 @@ This project is a machine learning-based book recommendation system that suggest
 
 ---
 
+## Screenshots
+
+### Home Page
+![Home](images/home.png)
+
+### Recommendation
+![Recommendation](images/recommendation.png)
+
+### Output
+![Output](images/output.png)
+
+---
+
 ## Run Project
 
 ```bash
