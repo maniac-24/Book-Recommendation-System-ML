@@ -4,27 +4,19 @@ import requests
 import re
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
+from rapidfuzz import process
 
 st.set_page_config(page_title="📚 Book Recommender", layout="wide")
 
-# ---------------- CSS (PREMIUM UI) ---------------- #
+# ---------------- CSS ---------------- #
 st.markdown("""
 <style>
-body {
-    background-color: #0e1117;
-}
+body { background-color: #0e1117; }
 
 .main-title {
     text-align: center;
     font-size: 40px;
     font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.search-box {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
 }
 
 .book-card {
@@ -61,7 +53,7 @@ def load_data():
     books = books.dropna(subset=["title"])
     books["authors"] = books["authors"].fillna("")
 
-    books = books.head(5000)  # performance
+    books = books.head(5000)
 
     books["tags"] = books["title"] + " " + books["authors"]
 
@@ -111,67 +103,90 @@ def recommend(book, n=5):
 
     return [books.iloc[i[0]] for i in books_list]
 
+# ---------------- SMART SEARCH ---------------- #
+def smart_search(query, choices, limit=5):
+    results = process.extract(query, choices, limit=limit)
+    return [r[0] for r in results]
+
 # ---------------- HEADER ---------------- #
 st.markdown("<div class='main-title'>📚 Book Recommender</div>", unsafe_allow_html=True)
 
-# ---------------- GOOGLE-STYLE SEARCH ---------------- #
-search = st.text_input("🔍 Search for a book (like Google)...")
+# ---------------- SEARCH ---------------- #
+search = st.text_input("🔍 Search books / authors (Google-style)...")
 
-# Filter books based on search
-filtered_books = books
+all_choices = (books["title"] + " " + books["authors"]).tolist()
+
+filtered_titles = books["title"]
+
+# 🔥 ADVANCED SEARCH LOGIC
 if search:
-    filtered_books = books[books['title'].str.contains(search, case=False)]
+    # 1. Direct match
+    filtered = books[
+        books['title'].str.lower().str.contains(search.lower(), na=False) |
+        books['authors'].str.lower().str.contains(search.lower(), na=False)
+    ]
+
+    # 2. If empty → use fuzzy search
+    if filtered.empty:
+        suggestions = smart_search(search, all_choices, limit=5)
+        filtered = books[books["title"].isin(suggestions)]
+
+    # 3. Show suggestions
+    st.markdown("### 🔎 Suggestions")
+    for title in filtered['title'].head(5):
+        st.write(f"👉 {title}")
+
+    filtered_titles = filtered["title"]
 
 # ---------------- SIDEBAR ---------------- #
 st.sidebar.title("⚙️ Settings")
 
 selected_book = st.sidebar.selectbox(
     "📖 Choose a book",
-    filtered_books['title'].values
+    filtered_titles.values
 )
 
 top_n = st.sidebar.slider("📊 Recommendations", 3, 10, 5)
 
-# ---------------- TRENDING SECTION ---------------- #
-st.markdown("## 🔥 Trending Books")
+# ---------------- TRENDING ---------------- #
+if not search:
+    st.markdown("## 🔥 Trending Books")
 
-top_books = books.sort_values(by="average_rating", ascending=False).head(5)
-cols = st.columns(5)
+    top_books = books.sort_values(by="average_rating", ascending=False).head(5)
+    cols = st.columns(5)
 
-for i, book in enumerate(top_books.itertuples()):
-    with cols[i]:
-        img = fetch_image(book.title)
-        st.image(img)
-        st.caption(book.title)
+    for i, book in enumerate(top_books.itertuples()):
+        with cols[i]:
+            img = fetch_image(book.title)
+            st.image(img)
+            st.caption(book.title)
 
-st.markdown("---")
+    st.markdown("---")
 
-# ---------------- BUTTON ---------------- #
-if st.button("🚀 Recommend"):
+# ---------------- AUTO RECOMMEND ---------------- #
+if search or st.button("🚀 Recommend"):
 
-    with st.spinner("Finding best books for you..."):
+    results = recommend(selected_book, top_n)
 
-        results = recommend(selected_book, top_n)
+    if not results:
+        st.error("❌ Book not found")
+    else:
+        st.markdown("## 🎯 Recommended For You")
 
-        if not results:
-            st.error("❌ Book not found")
-        else:
-            st.markdown("## 🎯 Recommended For You")
+        cols = st.columns(top_n)
 
-            cols = st.columns(top_n)
+        for i, book in enumerate(results):
+            with cols[i]:
 
-            for i, book in enumerate(results):
-                with cols[i]:
+                img = fetch_image(book.title)
+                rating = book["average_rating"] if "average_rating" in books.columns else "N/A"
 
-                    img = fetch_image(book.title)
-                    rating = book["average_rating"] if "average_rating" in books.columns else "N/A"
+                st.markdown(f"""
+                <div class="book-card">
+                    <img src="{img}" width="100%" style="border-radius:10px;">
+                    <div class="title">{book.title}</div>
+                    <div class="rating">⭐ {rating}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                    st.markdown(f"""
-                    <div class="book-card">
-                        <img src="{img}" width="100%" style="border-radius:10px;">
-                        <div class="title">{book.title}</div>
-                        <div class="rating">⭐ {rating}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-            st.success("✅ Recommendations ready!")
+        st.success("✅ Recommendations ready!")
