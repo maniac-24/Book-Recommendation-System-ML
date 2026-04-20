@@ -1,3 +1,4 @@
 streamlit
 pandas
-pickle-mixin
+scikit-learn
+requests
