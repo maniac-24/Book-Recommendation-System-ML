@@ -7,18 +7,48 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 st.set_page_config(page_title="📚 Book Recommender", layout="wide")
 
-# ---------------- CSS ---------------- #
+# ---------------- CSS (PREMIUM UI) ---------------- #
 st.markdown("""
 <style>
-.book-card {
-    background-color: #1c1f26;
-    padding: 10px;
-    border-radius: 12px;
-    text-align: center;
+body {
+    background-color: #0e1117;
 }
+
+.main-title {
+    text-align: center;
+    font-size: 40px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.search-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.book-card {
+    background: linear-gradient(145deg, #1c1f26, #111318);
+    padding: 12px;
+    border-radius: 15px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.book-card:hover {
+    transform: scale(1.07);
+    box-shadow: 0 10px 25px rgba(255,255,255,0.15);
+}
+
 .title {
     font-size: 14px;
     font-weight: 600;
+    margin-top: 8px;
+}
+
+.rating {
+    color: gold;
+    font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -31,8 +61,7 @@ def load_data():
     books = books.dropna(subset=["title"])
     books["authors"] = books["authors"].fillna("")
 
-    # 🔥 LIMIT DATA (IMPORTANT FOR STREAMLIT)
-    books = books.head(5000)
+    books = books.head(5000)  # performance
 
     books["tags"] = books["title"] + " " + books["authors"]
 
@@ -63,11 +92,15 @@ def fetch_image(book_name):
     except:
         pass
 
-    return "https://via.placeholder.com/150"
+    return "https://via.placeholder.com/150?text=No+Image"
 
 # ---------------- RECOMMEND ---------------- #
 def recommend(book, n=5):
-    index = books[books['title'] == book].index[0]
+    try:
+        index = books[books['title'] == book].index[0]
+    except:
+        return []
+
     distances = similarity[index]
 
     books_list = sorted(
@@ -78,41 +111,67 @@ def recommend(book, n=5):
 
     return [books.iloc[i[0]] for i in books_list]
 
+# ---------------- HEADER ---------------- #
+st.markdown("<div class='main-title'>📚 Book Recommender</div>", unsafe_allow_html=True)
+
+# ---------------- GOOGLE-STYLE SEARCH ---------------- #
+search = st.text_input("🔍 Search for a book (like Google)...")
+
+# Filter books based on search
+filtered_books = books
+if search:
+    filtered_books = books[books['title'].str.contains(search, case=False)]
+
 # ---------------- SIDEBAR ---------------- #
-st.sidebar.title("📚 Book Recommender")
+st.sidebar.title("⚙️ Settings")
 
 selected_book = st.sidebar.selectbox(
-    "🔍 Select a book",
-    books['title'].values
+    "📖 Choose a book",
+    filtered_books['title'].values
 )
 
-top_n = st.sidebar.slider("📊 Number of recommendations", 3, 10, 5)
+top_n = st.sidebar.slider("📊 Recommendations", 3, 10, 5)
 
-# ---------------- MAIN ---------------- #
-st.markdown("<h1 style='text-align:center;'>📚 Book Recommendation System</h1>", unsafe_allow_html=True)
-st.markdown("<hr>", unsafe_allow_html=True)
+# ---------------- TRENDING SECTION ---------------- #
+st.markdown("## 🔥 Trending Books")
 
+top_books = books.sort_values(by="average_rating", ascending=False).head(5)
+cols = st.columns(5)
+
+for i, book in enumerate(top_books.itertuples()):
+    with cols[i]:
+        img = fetch_image(book.title)
+        st.image(img)
+        st.caption(book.title)
+
+st.markdown("---")
+
+# ---------------- BUTTON ---------------- #
 if st.button("🚀 Recommend"):
 
-    with st.spinner("Finding best books..."):
+    with st.spinner("Finding best books for you..."):
 
         results = recommend(selected_book, top_n)
 
-        cols = st.columns(top_n)
+        if not results:
+            st.error("❌ Book not found")
+        else:
+            st.markdown("## 🎯 Recommended For You")
 
-        for i, book in enumerate(results):
-            with cols[i]:
+            cols = st.columns(top_n)
 
-                img = fetch_image(book.title)
+            for i, book in enumerate(results):
+                with cols[i]:
 
-                rating = book["average_rating"] if "average_rating" in books.columns else "N/A"
+                    img = fetch_image(book.title)
+                    rating = book["average_rating"] if "average_rating" in books.columns else "N/A"
 
-                st.markdown(f"""
-                <div class="book-card">
-                    <img src="{img}" width="100%">
-                    <div class="title">{book.title}</div>
-                    <div>⭐ {rating}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="book-card">
+                        <img src="{img}" width="100%" style="border-radius:10px;">
+                        <div class="title">{book.title}</div>
+                        <div class="rating">⭐ {rating}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-        st.success("✅ Done!")
+            st.success("✅ Recommendations ready!")
