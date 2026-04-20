@@ -54,6 +54,14 @@ This project is a machine learning-based book recommendation system that suggest
 
 ## Run Project
 
-```bash
+pip install -r requirements.txt
+streamlit run app.py
+
+---
+
+## Run Locally
+
+git clone https://github.com/maniac-24/Book-Recommendation-System-ML
+cd Book-Recommendation-System-ML
 pip install -r requirements.txt
 streamlit run app.py
