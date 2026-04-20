@@ -78,7 +78,6 @@ streamlit run app.py
 
 ```
 ├── app.py
-├── train_model.py
 ├── books.csv
 ├── requirements.txt
 ├── images/
