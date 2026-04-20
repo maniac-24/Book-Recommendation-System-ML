@@ -50,6 +50,8 @@ Built with **Python, Pandas, and Streamlit**, and deployed as a live web app.
 ![Home](images/home.png)
 ![Recommendation](images/output1.png)
 ![Output](images/output2.png)
+![Output](images/output3.png)
+![Output](images/output4.png)
 
 ### 📖 Recommendations
 
