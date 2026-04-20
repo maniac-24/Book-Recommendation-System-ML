@@ -1,18 +1,55 @@
 import streamlit as st
-import pickle
 import pandas as pd
 import requests
 import re
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import CountVectorizer
 
 # ---------------- CONFIG ---------------- #
-st.set_page_config(page_title="Book Recommender", layout="wide")
+st.set_page_config(page_title="📚 Book Recommender", layout="wide")
 
-# ---------------- LOAD DATA ---------------- #
+# ---------------- CUSTOM CSS (NETFLIX UI) ---------------- #
+st.markdown("""
+<style>
+body {
+    background-color: #0e1117;
+    color: white;
+}
+.book-card {
+    background-color: #1c1f26;
+    padding: 10px;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+.book-card:hover {
+    transform: scale(1.05);
+}
+.title {
+    font-size: 14px;
+    font-weight: 600;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------- LOAD DATA (NO PKL ✅) ---------------- #
 @st.cache_data
 def load_data():
-    books_dict = pickle.load(open('book_dict.pkl', 'rb'))
-    similarity = pickle.load(open('book_similarity.pkl', 'rb'))
-    return pd.DataFrame(books_dict), similarity
+    books = pd.read_csv("books.csv")
+
+    # Clean data
+    books = books.dropna(subset=["title"])
+    books["authors"] = books["authors"].fillna("")
+
+    # Create tags
+    books["tags"] = books["title"] + " " + books["authors"]
+
+    cv = CountVectorizer(max_features=5000, stop_words="english")
+    vectors = cv.fit_transform(books["tags"]).toarray()
+
+    similarity = cosine_similarity(vectors)
+
+    return books, similarity
 
 books, similarity = load_data()
 
@@ -60,17 +97,7 @@ def recommend(book, n=5):
     return [books.iloc[i[0]] for i in books_list]
 
 # ---------------- SIDEBAR ---------------- #
-st.sidebar.title("📚 About")
-
-st.sidebar.info("""
-### Book Recommendation System
-
-- 🤖 ML: Cosine Similarity  
-- 🖼️ Images: OpenLibrary + Google API  
-- ⚡ UI: Streamlit  
-""")
-
-st.sidebar.markdown("---")
+st.sidebar.title("📚 Book Recommender")
 
 selected_book = st.sidebar.selectbox(
     "🔍 Select a book",
@@ -79,22 +106,32 @@ selected_book = st.sidebar.selectbox(
 
 top_n = st.sidebar.slider("📊 Number of recommendations", 3, 10, 5)
 
-# ---------------- MAIN UI ---------------- #
+st.sidebar.markdown("---")
+
+st.sidebar.info("""
+🎯 Features:
+- ML-based recommendations
+- Netflix-style UI
+- Book ratings display
+- API-based images
+""")
+
+# ---------------- MAIN TITLE ---------------- #
 st.markdown(
-    "<h1 style='text-align: center;'>📚 Book Recommendation System</h1>",
+    "<h1 style='text-align:center;'>📚 Book Recommendation System</h1>",
     unsafe_allow_html=True
 )
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ---------------- RECOMMEND BUTTON ---------------- #
+# ---------------- BUTTON ---------------- #
 if st.button("🚀 Recommend"):
 
     with st.spinner("Finding best books for you..."):
 
         results = recommend(selected_book, top_n)
 
-        st.markdown("## 📖 Recommended Books")
+        st.markdown("## 🎬 Recommended For You")
 
         cols = st.columns(top_n)
 
@@ -103,19 +140,16 @@ if st.button("🚀 Recommend"):
 
                 img = fetch_image(book.title)
 
-                st.image(img, use_container_width=True)
+                # ⭐ rating (if exists)
+                rating = book["average_rating"] if "average_rating" in books.columns else "N/A"
 
-                # Title
-                st.markdown(
-                    f"<div style='font-weight:600; font-size:14px;'>{book.title}</div>",
-                    unsafe_allow_html=True
-                )
-
-                # Optional fields (safe check)
-                if 'authors' in books.columns:
-                    st.caption(f"✍️ {book.authors}")
-
-                if 'average_rating' in books.columns:
-                    st.caption(f"⭐ {book.average_rating}")
+                # Netflix-style card
+                st.markdown(f"""
+                <div class="book-card">
+                    <img src="{img}" style="width:100%; border-radius:10px;" />
+                    <div class="title">{book.title}</div>
+                    <div>⭐ {rating}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
         st.success("✅ Recommendations ready!")
